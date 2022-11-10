@@ -1,0 +1,40 @@
+name: Publish to Github Packages
+
+on:
+  workflow_call:
+    secrets:
+      NPM_AUTH_TOKEN:
+        required: true
+        description: 'NPM token with read access to @brandembassy repositories'
+      GITHUB_TOKEN:
+        required: true
+        description: 'Github token with write access to packages repository'
+
+jobs:
+  publish-gpr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+      # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
+      - run: yarn install --frozen-lockfile --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+      - run: npm rebuild
+
+      - run: yarn build
+
+      # Publish to Github Packages
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: 'https://npm.pkg.github.com'
+      - run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -1,4 +1,4 @@
-name: Run tests
+name: Run eslint
 
 on:
   workflow_call:
@@ -7,8 +7,15 @@ on:
         required: true
         description: 'NPM token with access to repository'
 
+    inputs:
+      maxWarnings:
+        default: 0
+        description: 'Max allowed warnings count [default: 0] (-1 for disable)'
+        required: false
+        type: number
+
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,4 +24,4 @@ jobs:
       - uses: actions/checkout@v3
       - uses: BrandEmbassy/github-actions/.github/workflows/js-node-setup.yml@master
       - uses: BrandEmbassy/github-actions/.github/workflows/js-yarn-install.yml@master
-      - run: yarn test
+      - run: yarn lint --max-warnings ${{ inputs.maxWarnings }}

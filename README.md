@@ -9,9 +9,7 @@ All reusable workflows have to meet these requirements
   workflow_call:```
 
 
-## Workflows examples
-
-### Run tests
+## Workflow call example
 
 ```yaml
 on:
@@ -27,21 +25,6 @@ jobs:
       NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```
 
-### Publish to Github Package Registry
+## Workflow sections
 
-It will first install dependencies with `yarn`, then trigger `yarn build`, and finally pushes to the GPR.
-
-```yaml
-on:
-  push:
-    tags:
-      - '**'
-
-jobs:
-  publish-gpr:
-    name: Publish to Github Packages
-    uses: BrandEmbassy/github-actions/.github/workflows/publish-gpr.yml@master
-    secrets:
-      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-``` 
+* [JS workflows](./README_JS.md)

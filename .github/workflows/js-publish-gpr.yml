@@ -5,7 +5,7 @@ on:
     secrets:
       NPM_AUTH_TOKEN:
         required: true
-        description: 'NPM token with read access to @brandembassy repositories'      
+        description: 'NPM token with read access to @brandembassy repositories'
 
 jobs:
   publish-gpr:
@@ -15,16 +15,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 'lts/*'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
-      # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
-      - run: yarn install --frozen-lockfile --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
-      - run: npm rebuild
+      - uses: BrandEmbassy/github-actions/.github/workflows/js-node-setup.yml@master
+      - uses: BrandEmbassy/github-actions/.github/workflows/js-yarn-install.yml@master
 
       - run: yarn build
 

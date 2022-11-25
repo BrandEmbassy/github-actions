@@ -5,10 +5,7 @@ on:
     secrets:
       NPM_AUTH_TOKEN:
         required: true
-        description: 'NPM token with read access to @brandembassy repositories'
-      GITHUB_TOKEN:
-        required: true
-        description: 'Github token with write access to packages repository'
+        description: 'NPM token with read access to @brandembassy repositories'      
 
 jobs:
   publish-gpr:

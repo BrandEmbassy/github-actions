@@ -24,4 +24,7 @@ jobs:
     secrets:
       NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```
-[JS workflows](./README_JS.md)
+
+## Workflow sections
+
+* [JS workflows](./README_JS.md)

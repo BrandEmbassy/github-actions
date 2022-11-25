@@ -48,6 +48,7 @@ jobs:
       - uses: BrandEmbassy/github-actions/.github/workflows/js-node-setup.yml@master
       - uses: BrandEmbassy/github-actions/.github/workflows/js-yarn-install.yml@master
 ```
+
 ### Run lint
 run linter (yarn lint) with all checkout and setup steps
 ```yaml

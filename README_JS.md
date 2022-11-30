@@ -58,6 +58,8 @@ on:
 jobs:
   job_name:
     runs-on: ubuntu-latest
+    with: 
+      maxWarnings: 0
     steps:
       - uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
 ```

@@ -7,7 +7,7 @@ All reusable workflows have to meet these requirements
 * be in the root of the .github/workflows directory
 * begin with ```on:
   workflow_call:```
-
+* resuable workflow cannot call another resuable workflow
 
 ## Workflow call example
 

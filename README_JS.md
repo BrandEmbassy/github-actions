@@ -61,3 +61,15 @@ jobs:
     steps:
       - uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
 ```
+
+By default, there is maxWarnings set to 0. To override this behavior, you need to pass maxWarnings value
+
+```yaml
+jobs:
+  job_name:
+    runs-on: ubuntu-latest
+    with: 
+      maxWarnings: 10
+    steps:
+      - uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
+```

@@ -1,0 +1,24 @@
+name: NPM install
+
+on:
+  workflow_call:
+    secrets:
+      NPM_AUTH_TOKEN:
+        required: true
+        description: 'NPM token with access to repository'
+      GITHUB_PACKAGES_TOKEN:
+        required: true
+        description: 'NPM token with access to GitHub packages registry'
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
+      - run: npm install --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: npm rebuild

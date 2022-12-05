@@ -6,7 +6,9 @@ on:
       NPM_AUTH_TOKEN:
         required: true
         description: 'NPM token with access to repository'
-
+      NPM_GITHUB_PACKAGES_TOKEN:
+        required: true
+        description: 'NPM token with access to GitHub packages registry'
     inputs:
       maxWarnings:
         default: 0
@@ -25,11 +27,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 'lts/*'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
-      # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
-      - run: yarn install --frozen-lockfile --ignore-scripts
+          cache: 'npm'
+      - name: Setup .npmrc
+        run: |
+          npm config set @BrandEmbassy:registry=https://npm.pkg.github.com
+          npm config set //npm.pkg.github.com/:_authToken=$NPM_GITHUB_PACKAGES_TOKEN
+          npm config set registry=https://registry.npmjs.org/
+          npm config set //registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NPM_GITHUB_PACKAGES_TOKEN: ${{ secrets.NPM_GITHUB_PACKAGES_TOKEN }}
+      - run: npm install --ignore-scripts
       - run: npm rebuild
-      - run: yarn lint --max-warnings ${{ inputs.maxWarnings }}
+      - run: npm run lint -- --max-warnings ${{ inputs.maxWarnings }}

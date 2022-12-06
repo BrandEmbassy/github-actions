@@ -1,0 +1,28 @@
+name: Check PR format and title
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  jira-reference:
+    name: "Check title contains Jira reference"
+    runs-on: ubuntu-latest
+      - uses: Slashgear/action-check-pr-title@2.0.0
+        with:
+          # Any PR title that does not contain a Jira reference will be rejected.
+          regex: '(DE|BECS)-[0-9]+\s'
+  description:
+    name: Check body contains description and possible impact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [[ $PR_BODY =~ .*([Pp]ossible[[:space:]][Ii]mpact:.{3,}[Dd]escription:.{4,}|[Dd]escription:.{4,}[Pp]ossible[[:space:]][Ii]mpact:.{3,}) ]]; then
+            echo "It's there!"
+            exit 0
+          else
+            echo "Possible impact or description is missing!"
+            exit 1
+          fi

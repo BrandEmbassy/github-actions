@@ -6,6 +6,20 @@ jobs:
   jira-reference:
     name: "Check title contains Jira reference"
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Check
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ PR_TITLE =~ .*(DE|BECS)-[0-9]+\s ]]; then
+            echo "It's there!"
+            exit 0
+          else
+            echo "Possible impact or description is missing!"
+            exit 1
+          fi
+
     steps:
       - uses: Slashgear/action-check-pr-title@v2.0.0
         with:

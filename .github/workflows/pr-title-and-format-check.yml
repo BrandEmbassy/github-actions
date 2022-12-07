@@ -12,19 +12,13 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ PR_TITLE =~ .*(DE|BECS)-[0-9]+\s ]]; then
+          if [[ $PR_TITLE =~ (DE|BECS)-[0-9]+[[:space:]].{5,} ]]; then
             echo "It's there!"
             exit 0
           else
-            echo "Possible impact or description is missing!"
+            echo "Title is missing JIRA ticket! PR title should contains DE-XXX or BECS-XXX followed by a short description."
             exit 1
           fi
-
-    steps:
-      - uses: Slashgear/action-check-pr-title@v2.0.0
-        with:
-          # Any PR title that does not contain a Jira reference will be rejected.
-          regexp: '(DE|BECS)-[0-9]+\s'
   description:
     name: Check body contains description and possible impact
     runs-on: ubuntu-latest

@@ -1,7 +1,6 @@
 name: Check PR format and title
 on:
-  pull_request:
-    types: [opened, edited, synchronize, reopened]
+  workflow_call:
 
 jobs:
   jira-reference:

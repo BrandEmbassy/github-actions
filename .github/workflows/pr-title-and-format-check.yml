@@ -10,7 +10,7 @@ jobs:
       - uses: Slashgear/action-check-pr-title@v2.0.0
         with:
           # Any PR title that does not contain a Jira reference will be rejected.
-          regex: '(DE|BECS)-[0-9]+\s'
+          regexp: '(DE|BECS)-[0-9]+\s'
   description:
     name: Check body contains description and possible impact
     runs-on: ubuntu-latest

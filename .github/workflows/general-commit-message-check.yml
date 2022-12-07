@@ -1,0 +1,20 @@
+name: 'Commit Message Check'
+on:
+  workflow_call:
+
+jobs:
+  check-commit-message:
+    name: Check Commit Message
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Check JIRA ticket number
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '^DE\-\d+.+$'
+          flags: 'gm'
+          checkAllCommitMessages: 'true'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
+          error: 'Your first line has to contain number of JIRA ticket'

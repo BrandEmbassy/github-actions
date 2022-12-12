@@ -12,7 +12,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ $PR_TITLE =~ (DE|BECS|CON)-[0-9]+[[:space:]:\]].{5,} ]]; then
+          if [[ $PR_TITLE =~ (DE|BECS|CON)-[0-9]+[[:space:]:].{5,} ]]; then
             echo "It's there!"
             exit 0
           else

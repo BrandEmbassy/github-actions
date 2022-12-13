@@ -12,7 +12,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ $PR_TITLE =~ (DE|BECS|CON)-[0-9]+[[:space:]:].{5,} ]]; then
+          if [[ "$PR_TITLE" =~ (DE|BECS|CON)-[0-9]+[[:space:]:].{5,} ]]; then
             echo "It's there!"
             exit 0
           else
@@ -27,7 +27,7 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          if [[ $PR_BODY =~ .*([Pp]ossible[[:space:]][Ii]mpact:.{3,}[Dd]escription:.{4,}|[Dd]escription:.{4,}[Pp]ossible[[:space:]][Ii]mpact:.{3,}) ]]; then
+          if [[ "$PR_BODY" =~ .*([Pp]ossible[[:space:]][Ii]mpact:.{3,}[Dd]escription:.{4,}|[Dd]escription:.{4,}[Pp]ossible[[:space:]][Ii]mpact:.{3,}) ]]; then
             echo "It's there!"
             exit 0
           else

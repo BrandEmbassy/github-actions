@@ -1,0 +1,37 @@
+
+name: Create a new version
+
+on:
+  workflow_call:
+    secrets:
+      NPM_AUTH_TOKEN:
+        required: true
+        description: 'NPM token with access to repository'
+    inputs:
+      VERSION_TYPE:
+        description: 'Type of version to create (minor, major, patch)'
+        required: true
+        default: 'minor'
+        type: string
+
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    if: "github.event.head_commit.author.email != 'github-actions@github.com'"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.NPM_AUTH_TOKEN }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+
+      - name: Create a new version
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          yarn version --${{ inputs.VERSION_TYPE }}
+          NEW_VERSION_TAG=`git describe --abbrev=0 --tags`
+          git push --atomic origin master $NEW_VERSION_TAG --force-with-lease

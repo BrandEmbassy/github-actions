@@ -35,20 +35,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### Node setup and install
-```yaml
-on:
-...
-
-jobs:
-  job_name:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: BrandEmbassy/github-actions/.github/workflows/js-node-setup.yml@master
-      - uses: BrandEmbassy/github-actions/.github/workflows/js-yarn-install.yml@master
-```
-
 ### Run lint
 run linter (yarn lint) with all checkout and setup steps
 ```yaml
@@ -56,20 +42,45 @@ on:
 ...
 
 jobs:
-  job_name:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
+  lint:
+    name: Lint codestyle
+    uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
 ```
 
 By default, there is maxWarnings set to 0. To override this behavior, you need to pass maxWarnings value
 
 ```yaml
 jobs:
-  job_name:
-    runs-on: ubuntu-latest
-    with: 
-      maxWarnings: 10
-    steps:
-      - uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
+  lint:
+    name: Lint codestyle with max warnings
+    uses: BrandEmbassy/github-actions/.github/workflows/js-lint.yml@master
+    with:
+      maxWarnings: 42
+    secrets:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+```
+
+### Version increase
+
+Create new version
+
+```yaml
+jobs:
+  version:
+    name: Create new version
+    uses: BrandEmbassy/github-actions/.github/workflows/js-version.yml@master
+  sectets:
+    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+```
+with version type (default: minor)
+
+```yaml
+jobs:
+  version:
+    name: Create new patch version
+    uses: BrandEmbassy/github-actions/.github/workflows/js-version.yml@master
+    with:
+      VERSION_TYPE: patch
+    sectets:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```

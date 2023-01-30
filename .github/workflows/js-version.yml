@@ -10,7 +10,7 @@ on:
     inputs:
       VERSION_TYPE:
         description: 'Type of version to create (minor, major, patch)'
-        required: true
+        required: false
         default: 'minor'
         type: string
 

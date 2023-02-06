@@ -1,4 +1,4 @@
-name: NPM install
+name: Run tests
 
 on:
   workflow_call:
@@ -8,12 +8,17 @@ on:
         description: 'NPM token with access to GitHub packages registry'
 
 jobs:
-  install:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
       - name: Setup .npmrc
         run: |
           npm config set @BrandEmbassy:registry=https://npm.pkg.github.com
@@ -23,3 +28,4 @@ jobs:
       # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
       - run: npm install --ignore-scripts
       - run: npm rebuild
+      - run: npm run build

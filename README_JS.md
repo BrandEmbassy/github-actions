@@ -96,3 +96,13 @@ jobs:
     sectets:
       NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```
+
+### Build project
+
+```yaml
+jobs:
+  version:
+    name: Build application
+    uses: BrandEmbassy/github-actions/.github/workflows/js-build.yml@master
+  sectets:
+    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

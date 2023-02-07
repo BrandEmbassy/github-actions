@@ -3,9 +3,10 @@ name: Run tests
 on:
   workflow_call:
     secrets:
-      NPM_AUTH_TOKEN:
+      NPM_GITHUB_PACKAGES_TOKEN:
         required: true
         description: 'NPM token with access to repository'
+
 
 jobs:
   test:
@@ -19,10 +20,12 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
-      # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
-      - run: yarn install --frozen-lockfile --ignore-scripts
+      - run: |
+          npm config set //npm.pkg.github.com._authToken $NPM_GITHUB_PACKAGES_TOKEN
+          yarn config list
+          yarn install --frozen-lockfile --ignore-scripts
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      - run: npm rebuild
+          NPM_GITHUB_PACKAGES_TOKEN: ${{ secrets.NPM_GITHUB_PACKAGES_TOKEN }}
+        # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
+      - run: yarn rebuild
       - run: yarn test

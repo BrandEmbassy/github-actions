@@ -2,6 +2,12 @@ name: Publish to Github Packages
 
 on:
   workflow_call:
+    inputs:
+      REGISTRY_URL:
+        required: false
+        description: 'NPM registry URL'
+        default: 'https://registry.npmjs.org'
+        type: string
     secrets:
       NPM_AUTH_TOKEN:
         required: true
@@ -22,7 +28,7 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: ${{ inputs.REGISTRY_URL }}
       # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
       - run: yarn install --frozen-lockfile --ignore-scripts
         env:

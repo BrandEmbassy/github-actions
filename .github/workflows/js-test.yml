@@ -11,7 +11,7 @@ on:
         required: false
         type: string
         description: 'Registry URL for brandembassy scoped packages'
-        default: 'https://registry.npmjs.org'
+        default: 'https://registry.npmjs.org/'
 jobs:
   test:
     runs-on: ubuntu-latest

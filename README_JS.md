@@ -1,5 +1,17 @@
 # JS common workflows
 
+## Issues and solutions
+
+**Issue:** `yarn install` returns error 400 during installation of @brandembassy scoped packages
+
+**Solution:** Check ending slash in registry url in .npmrc (`BRANDEMBASSY_SCOPE_REGISTRY_URL` variable)
+ ```yaml
+# incorrect
+BRANDEMBASSY_SCOPE_REGISTRY_URL: 'https://registry.npmjs.org'
+
+# correct:
+BRANDEMBASSY_SCOPE_REGISTRY_URL: 'https://registry.npmjs.org/'
+```
 ### Run tests
 
 ```yaml

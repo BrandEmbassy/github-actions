@@ -26,7 +26,6 @@ jobs:
           cache: 'yarn'
       - name: Setup .npmrc
         run: |
-          npm config set @BrandEmbassy:registry=$BRANDEMBASSY_SCOPE_REGISTRY_URL
           npm config set @brandembassy:registry=$BRANDEMBASSY_SCOPE_REGISTRY_URL
           npm config set $BRANDEMBASSY_SCOPE_REGISTRY_URL:_authToken=$NPM_AUTH_TOKEN
         env:

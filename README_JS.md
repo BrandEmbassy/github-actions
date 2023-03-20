@@ -96,3 +96,27 @@ jobs:
     sectets:
       NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```
+
+### Build project
+
+```yaml
+jobs:
+  version:
+    name: Build application
+    uses: BrandEmbassy/github-actions/.github/workflows/js-build.yml@master
+  secrets:
+    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+```
+optionally you can set register url for @brandembassy scoped packages and node version
+
+```yaml
+jobs:
+  version:
+    name: Build application
+    uses: BrandEmbassy/github-actions/.github/workflows/js-build.yml@master
+  with:
+    BRANDEMBASSY_SCOPE_REGISTRY_URL: https://npm.pkg.github.com/
+    NODE_VERSION: 'lts/*'
+  secrets:
+    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+```

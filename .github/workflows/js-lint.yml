@@ -39,7 +39,8 @@ jobs:
           BRANDEMBASSY_SCOPE_REGISTRY_URL: ${{ inputs.BRANDEMBASSY_SCOPE_REGISTRY_URL }}
       # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
       - run: yarn install --frozen-lockfile --ignore-scripts
+      - run: npm config set $BRANDEMBASSY_SCOPE_REGISTRY_URL:_authToken=
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          BRANDEMBASSY_SCOPE_REGISTRY_URL: ${{ inputs.BRANDEMBASSY_SCOPE_REGISTRY_URL }}
       - run: npm rebuild
       - run: yarn lint --max-warnings ${{ inputs.maxWarnings }}

@@ -12,6 +12,11 @@ on:
         type: string
         description: 'Registry URL for brandembassy scoped packages'
         default: 'https://registry.npmjs.org/'
+      NODE_VERSION:
+        required: false
+        type: string
+        description: 'Node version'
+        default: 'lts/*'
 
 jobs:
   install:
@@ -20,6 +25,11 @@ jobs:
       contents: read
       packages: read
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ inputs.NODE_VERSION }}
+          cache: 'yarn'
       - name: Setup .npmrc
         run: |
           npm config set @brandembassy:registry=$BRANDEMBASSY_SCOPE_REGISTRY_URL
@@ -29,6 +39,7 @@ jobs:
           BRANDEMBASSY_SCOPE_REGISTRY_URL: ${{ inputs.BRANDEMBASSY_SCOPE_REGISTRY_URL }}
       # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
       - run: yarn install --frozen-lockfile --ignore-scripts
+      - run: npm config set $BRANDEMBASSY_SCOPE_REGISTRY_URL:_authToken=
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          BRANDEMBASSY_SCOPE_REGISTRY_URL: ${{ inputs.BRANDEMBASSY_SCOPE_REGISTRY_URL }}
       - run: npm rebuild

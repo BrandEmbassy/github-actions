@@ -1,0 +1,30 @@
+name: Pull Request Stats
+on:
+  workflow_call:
+    inputs:
+      period:
+        description: 'Period in days'
+        type: string
+        default: '30'
+      sort-by:
+        description: 'Sort by'
+        type: string
+        default: 'COMMENTS'
+      teamsWebhookUrl:
+        description: 'Webhook'
+        required: true
+        type: string
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send pull request stats
+        uses: flowwer-dev/pull-request-stats@master
+        with:
+          repositories: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          period: ${{ inputs.period }}
+          charts: true
+          sort-by: ${{ inputs.sort-by }}
+          webhook: 'https://channels-eu1-qa.brandembassy.com/jenkins-dashboard/api/github/pull-request-stats?teamsWebhook=${{ inputs.teamsWebhookUrl }}'

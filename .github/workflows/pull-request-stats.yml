@@ -25,6 +25,5 @@ jobs:
           repositories: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
           period: ${{ inputs.period }}
-          charts: true
           sort-by: ${{ inputs.sort-by }}
           webhook: 'https://channels-eu1-qa.brandembassy.com/jenkins-dashboard/api/github/pull-request-stats?teamsWebhook=${{ inputs.teamsWebhookUrl }}'

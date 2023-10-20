@@ -6,7 +6,7 @@ on:
         description: 'Period in days'
         type: string
         default: '30'
-      sort-by:
+      sortBy:
         description: 'Sort by'
         type: string
         default: 'COMMENTS'
@@ -25,5 +25,5 @@ jobs:
           repositories: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
           period: ${{ inputs.period }}
-          sort-by: ${{ inputs.sort-by }}
+          sortBy: ${{ inputs.sortBy }}
           webhook: 'https://channels-eu1-qa.brandembassy.com/jenkins-dashboard/api/github/pull-request-stats?teamsWebhook=${{ inputs.teamsWebhookUrl }}'

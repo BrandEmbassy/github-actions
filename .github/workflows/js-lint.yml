@@ -17,6 +17,11 @@ on:
         description: 'Max allowed warnings count [default: 0] (-1 for disable)'
         required: false
         type: number
+      NODE_VERSION:
+        required: false
+        type: string
+        description: 'Node version'
+        default: 'lts/*'
 
 jobs:
   lint:
@@ -28,7 +33,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 'lts/*'
+          node-version: ${{ inputs.NODE_VERSION }}
           cache: 'yarn'
       - name: Setup .npmrc
         run: |

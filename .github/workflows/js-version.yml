@@ -6,7 +6,7 @@ on:
     secrets:
       NPM_AUTH_TOKEN:
         required: true
-        description: 'NPM token with access to repository'
+        description: 'GH token with access to repository'
     inputs:
       VERSION_TYPE:
         description: 'Type of version to create (minor, major, patch)'

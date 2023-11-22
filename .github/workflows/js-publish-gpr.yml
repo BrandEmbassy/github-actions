@@ -22,11 +22,11 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
       # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
       - run: yarn install --frozen-lockfile --ignore-scripts
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_GITHUB_PACKAGES_TOKEN }}
       - run: npm rebuild
 
       - run: yarn build

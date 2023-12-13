@@ -38,6 +38,11 @@ on:
         description: Maximum number of lines of result to include in the comment
         required: false
         type: number
+      tf-explicit-init:
+        default: false
+        description: Explicitly initialize Terraform module
+        required: false
+        type: boolean
       tf-plugin-cache:
         default: '/home/runner/.cache/terraform'
         description: Path to Terraform plugin cache, this must be aligned with the main `terragrunt.hcl`
@@ -169,7 +174,14 @@ jobs:
           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
           key: ${{ runner.os }}-tf-plugins-${{ hashFiles(format('{0}/.terraform.lock.hcl', inputs.working-directory)) }}
 
-      - name: Explicit init
+      - name: Explicit Terraform init
+        if: ${{ inputs.tf-explicit-init }}
+        run: |
+          terraform init -no-color
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Explicit Terragrunt init
         if: ${{ inputs.tg-explicit-init }}
         run: |
           terragrunt init -no-color

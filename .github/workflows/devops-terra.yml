@@ -1,0 +1,259 @@
+name: Install and Run Terraform and Terragrunt
+
+on:
+  workflow_call:
+    inputs:
+      aws-assume-role:
+        default: ''
+        description: IAM Role used by GitHub Actions
+        required: false
+        type: string
+      aws-region:
+        default: ''
+        description: Target AWS region
+        required: false
+        type: string
+      commands:
+        default: ''
+        description: Commands to execute
+        required: false
+        type: string
+      comment-grep-summary:
+        default: false
+        description: Toggle whether to grep summary from the Terraform output
+        required: false
+        type: boolean
+      comment-title:
+        default: 'Terra Results'
+        description: Comment title
+        required: false
+        type: string
+      comment-with-results:
+        default: false
+        description: Comment PR with results of the passed commands
+        required: false
+        type: boolean
+      output-max-lines:
+        default: 1024
+        description: Maximum number of lines of result to include in the comment
+        required: false
+        type: number
+      tf-plugin-cache:
+        default: '/home/runner/.cache/terraform'
+        description: Path to Terraform plugin cache, this must be aligned with the main `terragrunt.hcl`
+        required: false
+        type: string
+      tf-version:
+        default: '1.6.4'
+        description: Version of Terraform
+        required: false
+        type: string
+      tflint-version:
+        default: '0.49.0'
+        description: Version of TFLint
+        required: false
+        type: string
+      tg-version:
+        default: '0.50.8'
+        description: Version of Terragrunt
+        required: false
+        type: string
+      tg-explicit-init:
+        default: false
+        description: Explicitly initialize Terragrunt module
+        required: false
+        type: boolean
+      working-directory:
+        default: '.'
+        description: Working directory
+        required: false
+        type: string
+
+jobs:
+
+  terra:
+    env:
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+      TF_INSTALL_PATH: /usr/local/bin/terraform
+      TF_PLUGIN_CACHE_DIR: ${{ inputs.tf-plugin-cache }}
+      TFLINT_DOWNLOAD_URL: https://github.com/terraform-linters/tflint/releases/download/v${{ inputs.tflint-version }}/tflint_linux_amd64.zip
+      TFLINT_INSTALL_PATH: /usr/local/bin/tflint
+      TG_DOWNLOAD_URL: https://github.com/gruntwork-io/terragrunt/releases/download/v${{ inputs.tg-version }}/terragrunt_linux_amd64
+      TG_INSTALL_PATH: /usr/local/bin/terragrunt
+    name: Run passed commands
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug - use ACTIONS_STEP_DEBUG variable to enable
+        run: |
+          echo "::debug::aws_assume_role=${{ inputs.aws_assume_role }}"
+          echo "::debug::aws_region=${{ inputs.aws_region }}"
+          echo "::debug::working_directory=${{ inputs.module }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Terraform binary
+        id: cache-terraform-binary
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TF_INSTALL_PATH }}
+          key: ${{ runner.os }}-terraform-binary-${{ inputs.tf-version }}
+
+      - name: Install Terraform
+        if: steps.cache-terraform-binary.outputs.cache-hit != 'true'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ inputs.tf-version }}
+          terraform_wrapper: false
+
+      - name: Move Terraform binary
+        if: steps.cache-terraform-binary.outputs.cache-hit != 'true'
+        run: |
+          mv $(which terraform) ${{ env.TF_INSTALL_PATH }}
+        shell: bash
+
+      - name: Cache Terragrunt binary
+        if: ${{ !env.ACT }}
+        id: cache-terragrunt-binary
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TG_INSTALL_PATH }}
+          key: ${{ runner.os }}-terragrunt-binary-${{ inputs.tg-version }}
+
+      - name: Install Terragrunt
+        if: steps.cache-terragrunt-binary.outputs.cache-hit != 'true'
+        run: |
+          curl -s -S -L -o ${TG_INSTALL_PATH} ${TG_DOWNLOAD_URL}
+          chmod +x ${TG_INSTALL_PATH}
+        shell: bash
+
+      - name: Cache TFLint binary
+        if: ${{ !env.ACT }}
+        id: cache-tflint-binary
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TFLINT_INSTALL_PATH }}
+          key: ${{ runner.os }}-tflint-binary-${{ inputs.tflint-version }}
+
+      - name: Install TFLint
+        if: steps.cache-tflint-binary.outputs.cache-hit != 'true'
+        run: |
+          curl -s -S -L -o ${TFLINT_INSTALL_PATH}.zip ${TFLINT_DOWNLOAD_URL}
+          unzip ${TFLINT_INSTALL_PATH}.zip -d $(dirname ${TFLINT_INSTALL_PATH})
+          chmod +x ${TFLINT_INSTALL_PATH}
+        shell: bash
+
+      - name: Tools versions
+        run: |
+          terraform -version
+          terragrunt -version
+          tflint --version
+        shell: bash
+
+      - name: Configure AWS credentials
+        if: ${{ !env.ACT && inputs.aws-assume-role != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: github-actions-org-${{ github.repository_owner }}
+          role-to-assume: ${{ inputs.aws-assume-role }}
+
+      - name: Cache Terraform plugins
+        if: ${{ !env.ACT }}
+        id: cache-tf-plugins
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: ${{ runner.os }}-tf-plugins-${{ hashFiles(format('{0}/.terraform.lock.hcl', inputs.working-directory)) }}
+
+      - name: Explicit init
+        if: ${{ inputs.tg-explicit-init }}
+        run: |
+          terragrunt init -no-color
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Run commands
+        env:
+          COMMANDS: ${{ inputs.commands }}
+          OUTPUT_MAX_LINES: ${{ inputs.output-max-lines }}
+        id: run
+        if: inputs.commands != ''
+        run: |
+          echo -e "${COMMANDS}" | bash -e -u -x -o pipefail 2>&1 | tee /tmp/output
+          sed -e 's/\x1b\[[0-9;]*m//g' -i /tmp/output
+          if [[ $(cat /tmp/output | wc -l) -gt ${OUTPUT_MAX_LINES} ]]; then
+            echo "output-trimmed=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "output-trimmed=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          {
+            echo "output<<EOF"
+            tail -n ${OUTPUT_MAX_LINES} /tmp/output
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Comment PR
+        if: ${{ inputs.comment-with-results }}
+        env:
+          COMMENT_GREP_SUMMARY: ${{ inputs.comment-grep-summary }}
+          COMMENT_TITLE: ${{ inputs.comment-title }}
+          MODULE: ${{ inputs.working-directory }}
+          OUTPUT: ${{ steps.run.outputs.output }}
+          OUTPUT_TRIMMED: ${{ steps.run.outputs.output-trimmed }}
+          RESULT: ${{ steps.run.outcome }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const grep = (haystack, needle = /.*/) => {
+              for (const line of haystack.split('\n')) {
+                if (needle.test(line)) {
+                  return line;
+                }
+              }
+            }
+
+            const commentGrepSummary = (process.env.COMMENT_GREP_SUMMARY || '').toLowerCase() === 'true';
+            const commentTitle = process.env.COMMENT_TITLE;
+            const tgModule = process.env.MODULE;
+            const outputTrimmed = (process.env.OUTPUT_TRIMMED || '').toLowerCase() === 'true';
+            const output = (outputTrimmed ? '...\n' : '') + process.env.OUTPUT;
+            const result = process.env.RESULT === 'success' ? 'Success :sunny:' : 'Failure :x:';
+            const runUrl = process.env.GITHUB_SERVER_URL + '/' + process.env.GITHUB_REPOSITORY + '/actions/runs/' + process.env.GITHUB_RUN_ID;
+            const comment = outputTrimmed ? `Terraform plan is too long, please, see <a href="${runUrl}" target="_blank">run output</a> for full details.` : `Run details can be found <a href="${runUrl}" target="_blank">here</a>.`;
+            let summary = commentGrepSummary ? grep(output, /(Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy.)|(No changes. Your infrastructure matches the configuration.)/) : '';
+            if (summary.startsWith('Plan:')) {
+              summary = summary + (summary.includes(', 0 to destroy') ? ' :rocket:' : ' :boom:');
+            }
+            if (summary.startsWith('No changes.')) {
+              summary = summary + ' :tropical_drink:';
+            }
+
+            const response = await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body:
+              `
+              ## ${commentTitle}
+
+              Module: **${tgModule}**
+              Summary: ${summary}
+              Result: ${result}
+
+              <details>
+              <summary>Plan output</summary>
+              ${comment}
+
+              \`\`\`
+              ${output}
+              \`\`\`
+              </details>
+              `
+            })

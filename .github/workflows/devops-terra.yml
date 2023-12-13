@@ -38,6 +38,16 @@ on:
         description: Maximum number of lines of result to include in the comment
         required: false
         type: number
+      python-version:
+        default: '3.9'
+        description: Version of Python
+        required: false
+        type: string
+      tf-explicit-init:
+        default: false
+        description: Explicitly initialize Terraform module
+        required: false
+        type: boolean
       tf-plugin-cache:
         default: '/home/runner/.cache/terraform'
         description: Path to Terraform plugin cache, this must be aligned with the main `terragrunt.hcl`
@@ -69,6 +79,10 @@ on:
         required: false
         type: string
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
 
   terra:
@@ -94,6 +108,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check if Python should be installed
+        id: check-python
+        run: |
+          if [ -f requirements.txt ]; then
+            echo "use-python=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "use-python=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Setup Python
+        if: steps.check-python.outputs.use-python == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Install Python tools and dependencies
+        if: steps.check-python.outputs.use-python == 'true'
+        run: |
+          pip install -r requirements.txt
+
       - name: Cache Terraform binary
         id: cache-terraform-binary
         if: ${{ !env.ACT }}
@@ -113,7 +148,6 @@ jobs:
         if: steps.cache-terraform-binary.outputs.cache-hit != 'true'
         run: |
           mv $(which terraform) ${{ env.TF_INSTALL_PATH }}
-        shell: bash
 
       - name: Cache Terragrunt binary
         if: ${{ !env.ACT }}
@@ -128,7 +162,6 @@ jobs:
         run: |
           curl -s -S -L -o ${TG_INSTALL_PATH} ${TG_DOWNLOAD_URL}
           chmod +x ${TG_INSTALL_PATH}
-        shell: bash
 
       - name: Cache TFLint binary
         if: ${{ !env.ACT }}
@@ -144,14 +177,16 @@ jobs:
           curl -s -S -L -o ${TFLINT_INSTALL_PATH}.zip ${TFLINT_DOWNLOAD_URL}
           unzip ${TFLINT_INSTALL_PATH}.zip -d $(dirname ${TFLINT_INSTALL_PATH})
           chmod +x ${TFLINT_INSTALL_PATH}
-        shell: bash
+
+      - name: Create Terraform cache directory
+        run: |
+          mkdir -p ${{ env.TF_PLUGIN_CACHE_DIR }}
 
       - name: Tools versions
         run: |
           terraform -version
           terragrunt -version
           tflint --version
-        shell: bash
 
       - name: Configure AWS credentials
         if: ${{ !env.ACT && inputs.aws-assume-role != '' }}
@@ -169,11 +204,16 @@ jobs:
           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
           key: ${{ runner.os }}-tf-plugins-${{ hashFiles(format('{0}/.terraform.lock.hcl', inputs.working-directory)) }}
 
-      - name: Explicit init
+      - name: Explicit Terraform init
+        if: ${{ inputs.tf-explicit-init }}
+        run: |
+          terraform init -no-color
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Explicit Terragrunt init
         if: ${{ inputs.tg-explicit-init }}
         run: |
           terragrunt init -no-color
-        shell: bash
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run commands
@@ -196,7 +236,6 @@ jobs:
             tail -n ${OUTPUT_MAX_LINES} /tmp/output
             echo "EOF"
           } >> "${GITHUB_OUTPUT}"
-        shell: bash
         working-directory: ${{ inputs.working-directory }}
 
       - name: Comment PR
@@ -224,7 +263,7 @@ jobs:
             const tgModule = process.env.MODULE;
             const outputTrimmed = (process.env.OUTPUT_TRIMMED || '').toLowerCase() === 'true';
             const output = (outputTrimmed ? '...\n' : '') + process.env.OUTPUT;
-            const result = process.env.RESULT === 'success' ? 'Success :sunny:' : 'Failure :x:';
+            const result = process.env.RESULT === 'success' ? 'Success ' + (Math.round(Math.random() * 10) % 2 ? ':sunny:' : ':rainbow:') : 'Failure :x:';
             const runUrl = process.env.GITHUB_SERVER_URL + '/' + process.env.GITHUB_REPOSITORY + '/actions/runs/' + process.env.GITHUB_RUN_ID;
             const comment = outputTrimmed ? `Terraform plan is too long, please, see <a href="${runUrl}" target="_blank">run output</a> for full details.` : `Run details can be found <a href="${runUrl}" target="_blank">here</a>.`;
             let summary = commentGrepSummary ? grep(output, /(Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy.)|(No changes. Your infrastructure matches the configuration.)/) : '';
@@ -232,7 +271,7 @@ jobs:
               summary = summary + (summary.includes(', 0 to destroy') ? ' :rocket:' : ' :boom:');
             }
             if (summary.startsWith('No changes.')) {
-              summary = summary + ' :tropical_drink:';
+              summary = summary + (Math.round(Math.random() * 10) % 2 ? ' :ice_cream:' : ' :tropical_drink:');
             }
 
             const response = await github.rest.issues.createComment({

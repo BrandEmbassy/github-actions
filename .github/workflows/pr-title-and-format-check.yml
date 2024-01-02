@@ -22,6 +22,9 @@ jobs:
   description:
     name: Check body contains description and possible impact
     runs-on: ubuntu-latest
+    # We don't want to run this check on dependabot PR's
+    # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#responding-to-events
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     steps:
       - name: Check
         env:

@@ -26,7 +26,23 @@ jobs:
     # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#responding-to-events
     if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     steps:
+      - name: Check if PR was created by Dependabot
+        id: check_dependabot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_AUTHOR=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json author --jq '.author.login')
+          echo "PR Author: $PR_AUTHOR"
+          if [[ "$PR_AUTHOR" == "app/dependabot" ]]; then
+            echo "Running for Dependabot PR"
+            echo "PR_WAS_CREATED_BY_DEPENDABOT=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not a Dependabot PR"
+            echo "PR_WAS_CREATED_BY_DEPENDABOT=0" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check
+        if: steps.check_dependabot.outputs.PR_WAS_CREATED_BY_DEPENDABOT == '0'
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |

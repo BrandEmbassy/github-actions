@@ -79,4 +79,4 @@ jobs:
             ${{ runner.os }}-phpstan-
 
       - name: PHPStan
-        run: ENVIRONMENT=development composer phpstan
+        run: composer phpstan

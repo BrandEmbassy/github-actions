@@ -23,11 +23,16 @@ on:
         type: string
         description: 'PHP ini values'
         default: ''
+      RUNS_ON:
+        required: false
+        type: string
+        description: 'Runs on'
+        default: 'ubuntu-latest'
 
 jobs:
   phpstan:
     name: PHPStan
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.RUNS_ON }}
 
     steps:
       - name: Checkout

@@ -117,6 +117,11 @@ jobs:
             echo "use-python=false" >> "${GITHUB_OUTPUT}"
           fi
 
+      - name: Upgrade Pip
+        if: steps.check-python.outputs.use-python == 'true'
+        run: |
+          python -m pip install --upgrade pip
+
       - name: Setup Python
         if: steps.check-python.outputs.use-python == 'true'
         uses: actions/setup-python@v4

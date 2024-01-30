@@ -27,6 +27,11 @@ on:
         type: string
         description: 'Runs on'
         default: 'ubuntu-latest'
+      RECTOR_CACHE_PATH:
+        required: false
+        type: string
+        description: 'Rector cache path'
+        default: './temp/rector'
 
 jobs:
   rector:
@@ -42,7 +47,7 @@ jobs:
         with:
           ini-values: ${{ inputs.PHP_INI_VALUES }}
           php-version: ${{ inputs.PHP_VERSION }}
-          extensions:  ${{ inputs.PHP_EXTENSIONS }}
+          extensions: ${{ inputs.PHP_EXTENSIONS }}
 
       - name: Cache composer dependencies
         uses: actions/cache@v4
@@ -60,7 +65,7 @@ jobs:
         id: cache-rector-restore
         uses: actions/cache/restore@v4
         with:
-          path: ./temp/rector
+          path: ${{ inputs.RECTOR_CACHE_PATH }}
           key: ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-${{ github.ref }}
           restore-keys: |
             ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-
@@ -75,6 +80,6 @@ jobs:
         id: cache-rector-save
         uses: actions/cache/save@v4
         with:
-          path: ./temp/rector
+          path: ${{ inputs.RECTOR_CACHE_PATH }}
           # Adding github.run_id to force cache update https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
           key: ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-${{ github.ref }}-${{ github.run_id }}

@@ -1,0 +1,85 @@
+name: Rector
+
+on:
+  workflow_call:
+    secrets:
+      COMPOSER_TOKEN:
+        required: true
+        description: 'composer token'
+    inputs:
+      PHP_VERSION:
+        required: false
+        type: string
+        description: 'PHP version'
+        default: '8.1'
+      PHP_EXTENSIONS:
+        required: false
+        type: string
+        description: 'A list of PHP extensions to install'
+        default: 'mbstring,sockets'
+      PHP_INI_VALUES:
+        required: false
+        type: string
+        description: 'PHP ini values'
+        default: ''
+      RUNS_ON:
+        required: false
+        type: string
+        description: 'Runs on'
+        default: 'ubuntu-latest'
+      RECTOR_CACHE_PATH:
+        required: false
+        type: string
+        description: 'Rector cache path'
+        default: './temp/rector'
+
+jobs:
+  rector:
+    name: Rector
+    runs-on: ${{ inputs.RUNS_ON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          ini-values: ${{ inputs.PHP_INI_VALUES }}
+          php-version: ${{ inputs.PHP_VERSION }}
+          extensions: ${{ inputs.PHP_EXTENSIONS }}
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: |
+          composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+          composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Restore rector cache
+        id: cache-rector-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ inputs.RECTOR_CACHE_PATH }}
+          key: ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-${{ github.ref }}
+          restore-keys: |
+            ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-
+            ${{ runner.os }}-rector-
+
+      # Only --dry-run will fail when changes are detected
+      - name: Rector
+        run: vendor/bin/rector process --dry-run
+
+      # Explicitly save rector cache
+      - name: Cache rector save
+        id: cache-rector-save
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ inputs.RECTOR_CACHE_PATH }}
+          # Adding github.run_id to force cache update https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-${{ github.ref }}-${{ github.run_id }}

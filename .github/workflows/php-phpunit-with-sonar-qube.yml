@@ -1,0 +1,78 @@
+name: PHP Unit with Sonar Qube
+
+on:
+  workflow_call:
+    secrets:
+      COMPOSER_TOKEN:
+        required: true
+        description: 'composer token'
+      SONAR_TOKEN:
+        required: true
+        description: 'SonarQube token'
+    inputs:
+      SONAR_HOST_URL:
+        required: false
+        type: string
+        description: 'SonaQube host URL'
+        default: 'https://sonar.nice.com'
+      PHP_VERSION:
+        required: false
+        type: string
+        description: 'PHP version'
+        default: '8.1'
+      PHP_EXTENSIONS:
+        required: false
+        type: string
+        description: 'A list of PHP extensions to install'
+        default: 'mbstring,sockets,xdebug'
+      PHP_INI_VALUES:
+        required: false
+        type: string
+        description: 'PHP ini values'
+        default: ''
+      RUNS_ON:
+        required: false
+        type: string
+        description: 'Runs on'
+        default: 'ubuntu-latest'
+
+jobs:
+  phpunit-with-sonar-qube:
+    name: PHP Unit with Sonar Qube
+    runs-on: ${{ inputs.RUNS_ON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          ini-values: ${{ inputs.PHP_INI_VALUES }}
+          php-version: ${{ inputs.PHP_VERSION }}
+          extensions:  ${{ inputs.PHP_EXTENSIONS }}
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: |
+          composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+          composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run phpunit with code coverage and Sonar Qube
+        run: composer phpunit-cc
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ inputs.SONAR_HOST_URL }}

@@ -50,7 +50,7 @@ jobs:
           extensions:  ${{ inputs.PHP_EXTENSIONS }}
 
       - name: Cache composer dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -70,7 +70,7 @@ jobs:
           fi
 
       - name: Cache phpstan
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ./temp/phpstan
           key: ${{ runner.os }}-phpstan-${{ hashFiles('**/composer.lock') }}-${{ github.ref }}

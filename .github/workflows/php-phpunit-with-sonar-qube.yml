@@ -3,6 +3,9 @@ name: PHP Unit with Sonar Qube
 on:
   workflow_call:
     secrets:
+      COMPOSER_TOKEN:
+        required: true
+        description: 'composer token'
       SONAR_TOKEN:
         required: true
         description: 'SonarQube token'
@@ -61,7 +64,9 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --prefer-dist
+        run: |
+          composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+          composer install --no-progress --prefer-dist --optimize-autoloader
 
       - name: Run phpunit with code coverage and Sonar Qube
         run: composer phpunit-cc

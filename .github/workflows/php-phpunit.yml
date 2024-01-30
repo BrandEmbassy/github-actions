@@ -2,6 +2,10 @@ name: PHP Unit
 
 on:
   workflow_call:
+    secrets:
+      COMPOSER_TOKEN:
+        required: true
+        description: 'composer token'
     inputs:
       COMPOSER_ARG:
          required: false
@@ -57,7 +61,9 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer ${{ inputs.COMPOSER_ARG }} --prefer-dist
+        run: |
+          composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+          composer ${{ inputs.COMPOSER_ARG }} --no-progress --prefer-dist --optimize-autoloader
 
       - name: Run phpunit
         run: composer phpunit

@@ -4,7 +4,7 @@ on:
   workflow_call:
     secrets:
       COMPOSER_TOKEN:
-        required: true
+        required: false
         description: 'composer token'
     inputs:
       COMPOSER_ARG:
@@ -60,10 +60,14 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Configure composer token
+        if: env.COMPOSER_TOKEN != ''
+        env:
+          COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
+        run: composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+
       - name: Install dependencies
-        run: |
-          composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
-          composer ${{ inputs.COMPOSER_ARG }} --no-progress --prefer-dist --optimize-autoloader
+        run: composer ${{ inputs.COMPOSER_ARG }} --no-progress --prefer-dist --optimize-autoloader
 
       - name: Run phpunit
         run: composer phpunit

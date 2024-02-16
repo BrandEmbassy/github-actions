@@ -75,6 +75,14 @@ jobs:
             ${{ runner.os }}-rector-${{ hashFiles('**/composer.lock') }}-
             ${{ runner.os }}-rector-
 
+      - name: Copy phpstan.neon.example to phpstan.neon if it exists
+        run: |
+          if [ -f phpstan.neon.example ]; then
+            cp phpstan.neon.example phpstan.neon
+          else
+            echo "phpstan.neon.example does not exist, skipping copy."
+          fi
+
       # Only --dry-run will fail when changes are detected
       - name: Rector
         run: vendor/bin/rector process --dry-run

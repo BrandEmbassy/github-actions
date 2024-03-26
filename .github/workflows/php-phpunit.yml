@@ -161,7 +161,7 @@ jobs:
           MYSQL_USER: ${{ inputs.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ inputs.MYSQL_PASSWORD }}
           MYSQL_ROOT_PASSWORD: ${{ inputs.MYSQL_ROOT_PASSWORD }}
-        uses: isbang/compose-action@v1.5.1
+        uses: hoverkraft-tech/compose-action@v1.5.1
         with:
           compose-file: ${{ env.SERVICES_TO_RUN }}
           up-flags: "--wait"

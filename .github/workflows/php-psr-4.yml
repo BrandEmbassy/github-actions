@@ -1,0 +1,73 @@
+#file: noinspection YAMLSchemaValidation
+name: PSR-4
+
+on:
+  workflow_call:
+    secrets:
+      COMPOSER_TOKEN:
+        required: false
+        description: 'composer token'
+    inputs:
+      RUNS_ON:
+        required: false
+        type: string
+        description: 'Runs on'
+        default: 'ubuntu-latest'
+
+jobs:
+  psr4:
+    name: PSR-4
+    runs-on: ${{ inputs.RUNS_ON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Configure composer token
+        run: composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Check PSR-4 compliance
+        run: |
+          # Run the composer command and store the lines in an array
+          mapfile -t OUTPUT_LINES <<< "$(composer dump-autoload --strict-psr --dry-run --optimize 2>&1)"
+          
+          NON_COMPLIANT_CLASSES=()
+          
+          for LINE in "${OUTPUT_LINES[@]}"; do
+            if [[ $LINE != *"does not comply with psr-4 autoloading standard"* ]]; then
+              continue
+            fi
+            
+            # We care only about our own classes
+            if [[ $LINE == *"vendor/"* ]]; then
+              continue
+            fi
+            
+            NON_COMPLIANT_CLASSES+=("$LINE")
+          done
+          
+          if [[ ${#NON_COMPLIANT_CLASSES[@]} -eq 0 ]]; then
+            echo "All autoloader classes comply with PSR-4."
+            exit 0
+          else
+            echo "Non-compliant classes:"
+            for CLASS in "${NON_COMPLIANT_CLASSES[@]}"; do
+              echo "$CLASS"
+            done
+            exit 1
+          fi
+

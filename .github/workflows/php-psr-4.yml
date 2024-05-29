@@ -1,5 +1,5 @@
 #file: noinspection YAMLSchemaValidation
-name: PSR-4
+name: 'PSR-4'
 
 on:
   workflow_call:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   psr4:
-    name: PSR-4
+    name: 'PSR-4'
     runs-on: ${{ inputs.RUNS_ON }}
 
     steps:

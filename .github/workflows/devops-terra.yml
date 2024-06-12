@@ -117,27 +117,24 @@ jobs:
             echo "use-python=false" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Upgrade Pip
-        if: steps.check-python.outputs.use-python == 'true'
-        run: |
-          python -m pip install --upgrade pip
-
       - name: Setup Python
         if: steps.check-python.outputs.use-python == 'true'
-        uses: actions/setup-python@v4
+        id: setup-python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python-version }}
           cache: pip
+          python-version: ${{ inputs.python-version }}
 
       - name: Install Python tools and dependencies
         if: steps.check-python.outputs.use-python == 'true'
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Cache Terraform binary
         id: cache-terraform-binary
         if: ${{ !env.ACT }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.TF_INSTALL_PATH }}
           key: ${{ runner.os }}-terraform-binary-${{ inputs.tf-version }}
@@ -157,7 +154,7 @@ jobs:
       - name: Cache Terragrunt binary
         if: ${{ !env.ACT }}
         id: cache-terragrunt-binary
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.TG_INSTALL_PATH }}
           key: ${{ runner.os }}-terragrunt-binary-${{ inputs.tg-version }}
@@ -171,7 +168,7 @@ jobs:
       - name: Cache TFLint binary
         if: ${{ !env.ACT }}
         id: cache-tflint-binary
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.TFLINT_INSTALL_PATH }}
           key: ${{ runner.os }}-tflint-binary-${{ inputs.tflint-version }}
@@ -204,7 +201,7 @@ jobs:
       - name: Cache Terraform plugins
         if: ${{ !env.ACT }}
         id: cache-tf-plugins
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.TF_PLUGIN_CACHE_DIR }}
           key: ${{ runner.os }}-tf-plugins-${{ hashFiles(format('{0}/.terraform.lock.hcl', inputs.working-directory)) }}
@@ -225,6 +222,7 @@ jobs:
         env:
           COMMANDS: ${{ inputs.commands }}
           OUTPUT_MAX_LINES: ${{ inputs.output-max-lines }}
+          TF_VAR_python_path: ${{ steps.setup-python.outputs.python-path }}
         id: run
         if: inputs.commands != ''
         run: |

@@ -13,6 +13,11 @@ on:
         required: false
         default: 'minor'
         type: string
+      VERSION_PREFIX:
+        description: 'Should the version have a prefix like v1.1.1'
+        required: false
+        default: true
+        type: boolean
 
 
 jobs:
@@ -32,6 +37,12 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          if [ ${{ inputs.VERSION_PREFIX }} = true ]; then
+              TAG_PREFIX="v"
+          else
+              TAG_PREFIX=""
+          fi
+          yarn config set version-tag-prefix "$TAG_PREFIX"
           yarn version --${{ inputs.VERSION_TYPE }}
           NEW_VERSION_TAG=`git describe --abbrev=0 --tags`
           git push --atomic origin master $NEW_VERSION_TAG --force-with-lease

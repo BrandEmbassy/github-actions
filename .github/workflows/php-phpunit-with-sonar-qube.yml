@@ -74,8 +74,9 @@ on:
         default: 'master'
       CHANNEL_INTEGRATIONS:
         required: false
-        type: string
+        type: boolean
         description: 'is it channel integration repo'
+        default: false
 
 jobs:
   phpunit-with-sonar-qube:
@@ -174,7 +175,7 @@ jobs:
 
       - name: Run phpunit with code coverage and Sonar Qube
         run: |
-          if [ ${{ inputs.CHANNEL_INTEGRATIONS }} != true ]; then
+          if [ ${{ inputs.CHANNEL_INTEGRATIONS }} != 'true' ]; then
             composer phpunit-cc
           fi
 

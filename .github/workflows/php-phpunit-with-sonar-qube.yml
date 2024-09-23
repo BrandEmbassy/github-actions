@@ -177,6 +177,8 @@ jobs:
         run: |
           if [ ${{ inputs.CHANNEL_INTEGRATIONS }} != 'true' ]; then
             composer phpunit-cc
+          else
+            composer test-channel-integration
           fi
 
       - name: SonarQube Scan

@@ -174,9 +174,7 @@ jobs:
 
       - name: Run phpunit with code coverage and Sonar Qube
         run: |
-          if [ ${{ inputs.CHANNEL_INTEGRATIONS }} = true ]; then
-            composer phpunit
-          else
+          if [ ${{ inputs.CHANNEL_INTEGRATIONS }} != true ]; then
             composer phpunit-cc
           fi
 

@@ -173,8 +173,12 @@ jobs:
           up-flags: "--wait"
 
       - name: Run phpunit with code coverage and Sonar Qube
-        if: env.CHANNEL_INTEGRATIONS == ''
-        run: composer phpunit-cc ${{ inputs.CHANNEL_INTEGRATIONS }}
+        run: |
+          if [ ${{ inputs.CHANNEL_INTEGRATIONS }} = true ]; then
+            composer phpunit
+          else
+            composer phpunit-cc
+          fi
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master

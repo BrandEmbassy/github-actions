@@ -175,7 +175,7 @@ jobs:
 
       - name: Run phpunit with code coverage and Sonar Qube
         if: env.CHANNEL_INTEGRATIONS != true
-        run: composer phpunit-cc
+        run: composer phpunit-cc ${{ inputs.CHANNEL_INTEGRATIONS }}
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master

@@ -8,6 +8,21 @@ on:
         required: false
         description: 'composer token'
     inputs:
+      PHP_VERSION:
+        required: false
+        type: string
+        description: 'PHP version'
+        default: '8.1'
+      PHP_EXTENSIONS:
+        required: false
+        type: string
+        description: 'A list of PHP extensions to install'
+        default: 'mbstring,sockets'
+      PHP_INI_VALUES:
+        required: false
+        type: string
+        description: 'PHP ini values'
+        default: ''
       RUNS_ON:
         required: false
         type: string
@@ -22,6 +37,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          ini-values: ${{ inputs.PHP_INI_VALUES }}
+          php-version: ${{ inputs.PHP_VERSION }}
+          extensions: ${{ inputs.PHP_EXTENSIONS }}
 
       - name: Get composer cache directory
         id: composer-cache

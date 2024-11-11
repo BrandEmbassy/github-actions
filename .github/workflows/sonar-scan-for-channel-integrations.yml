@@ -121,7 +121,10 @@ jobs:
         run: composer config github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
 
       - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          composer install --no-progress --prefer-dist --optimize-autoloader
 
       - name: Copy configuration files
         if: env.COPY_CONFIGURATION_FILES != ''

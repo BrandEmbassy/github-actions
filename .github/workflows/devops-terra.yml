@@ -54,17 +54,17 @@ on:
         required: false
         type: string
       tf-version:
-        default: '1.6.4'
+        default: '1.9.41'
         description: Version of Terraform
         required: false
         type: string
       tflint-version:
-        default: '0.49.0'
+        default: '0.53.0'
         description: Version of TFLint
         required: false
         type: string
       tg-version:
-        default: '0.50.8'
+        default: '0.69.1'
         description: Version of Terragrunt
         required: false
         type: string

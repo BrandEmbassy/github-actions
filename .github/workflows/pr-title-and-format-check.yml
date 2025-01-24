@@ -12,11 +12,11 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ "$PR_TITLE" =~ (DE|BECS|CON|CHT)-[0-9]+[[:space:]:].{5,} ]]; then
+          if [[ "$PR_TITLE" =~ (DE|BECS|CON|CHT|LBS)-[0-9]+[[:space:]:].{4,} ]]; then
             echo "It's there!"
             exit 0
           else
-            echo "Title is missing JIRA ticket! PR title should contains DE-XXX, BECS-XXX, CON-XXX or CHT-XXX followed by a short description."
+            echo "Title is missing JIRA ticket! PR title should contains DE-XXX, BECS-XXX, CON-XXX, CHT-XXX or LBS-XXX followed by a short description."
             exit 1
           fi
   description:

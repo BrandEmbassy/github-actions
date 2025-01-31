@@ -74,15 +74,15 @@ jobs:
 
 ### Version increase
 
-Create new version
+Create new version. `NPM_AUTH_TOKEN` is actually a GH token with write access to the repository.
 
 ```yaml
 jobs:
   version:
     name: Create new version
     uses: BrandEmbassy/github-actions/.github/workflows/js-version.yml@master
-  sectets:
-    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    secrets:
+      NPM_AUTH_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
 ```
 with version type (default: minor)
 
@@ -93,8 +93,8 @@ jobs:
     uses: BrandEmbassy/github-actions/.github/workflows/js-version.yml@master
     with:
       VERSION_TYPE: patch
-    sectets:
-      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    secrets:
+      NPM_AUTH_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
 ```
 
 ### Build project
@@ -104,8 +104,8 @@ jobs:
   version:
     name: Build application
     uses: BrandEmbassy/github-actions/.github/workflows/js-build.yml@master
-  secrets:
-    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    secrets:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```
 optionally you can set register url for @brandembassy scoped packages and node version
 
@@ -114,9 +114,9 @@ jobs:
   version:
     name: Build application
     uses: BrandEmbassy/github-actions/.github/workflows/js-build.yml@master
-  with:
-    BRANDEMBASSY_SCOPE_REGISTRY_URL: https://npm.pkg.github.com/
-    NODE_VERSION: 'lts/*'
-  secrets:
-    NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    with:
+      BRANDEMBASSY_SCOPE_REGISTRY_URL: https://npm.pkg.github.com/
+      NODE_VERSION: 'lts/*'
+    secrets:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 ```

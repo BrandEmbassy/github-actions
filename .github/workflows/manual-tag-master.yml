@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to create (e.g. 25.1)'
+        description: 'Tag to create (e.g. 25.3.0)'
         required: true
         type: string
       dry_run:
@@ -17,8 +17,10 @@ jobs:
   create-tag:
     runs-on: ubuntu-latest
     env:
+      # Replace with your organization name.
       ORG_NAME: "BrandEmbassy"
-      GITHUB_TOKEN: ${{ secrets.AUTO_TAG_TOKEN }}
+      # Use the provided GitHub token. If needed, replace with a PAT that has the required permissions.
+      GITHUB_TOKEN: ${{ secrets.BE_TECH_ACCOUNT }}
       TAG_NAME: ${{ github.event.inputs.tag }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
     steps:

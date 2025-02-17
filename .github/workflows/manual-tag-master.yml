@@ -37,7 +37,27 @@ jobs:
 
           while :; do
             echo "Fetching page $page..."
-            repos=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/orgs/$ORG_NAME/repos?per_page=$per_page&page=$page")
+
+            # Fetch repositories with HTTP status code
+            response=$(curl -s -w "\n%{http_code}" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/orgs/$ORG_NAME/repos?per_page=$per_page&page=$page")
+            http_code=$(echo "$response" | tail -n1)
+            repos=$(echo "$response" | sed '$d')
+
+            if [ "$http_code" != "200" ]; then
+              echo "Error: Received HTTP status code $http_code when fetching repositories."
+              echo "Full response:"
+              echo "$repos"
+              exit 1
+            fi
+
+            # Ensure we received a JSON array.
+            repo_type=$(echo "$repos" | jq -r 'type')
+            if [ "$repo_type" != "array" ]; then
+              echo "Error: Expected an array but got a $repo_type. Response:"
+              echo "$repos"
+              exit 1
+            fi
+          
             repo_count=$(echo "$repos" | jq 'length')
             if [ "$repo_count" -eq 0 ]; then
               echo "No more repositories found."

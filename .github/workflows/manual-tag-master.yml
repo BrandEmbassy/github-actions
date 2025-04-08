@@ -17,9 +17,7 @@ jobs:
   create-tag:
     runs-on: ubuntu-latest
     env:
-      # Replace with your organization name.
       ORG_NAME: "BrandEmbassy"
-      # Use the provided GitHub token. If needed, replace with a PAT that has the required permissions.
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG_NAME: ${{ github.event.inputs.tag }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}

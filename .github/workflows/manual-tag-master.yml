@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to create (e.g. 25.1)'
+        description: 'Tag to create (e.g. 25.3.0)'
         required: true
         type: string
       dry_run:
@@ -17,7 +17,9 @@ jobs:
   create-tag:
     runs-on: ubuntu-latest
     env:
+      # Replace with your organization name.
       ORG_NAME: "BrandEmbassy"
+      # Use the provided GitHub token. If needed, replace with a PAT that has the required permissions.
       GITHUB_TOKEN: ${{ secrets.AUTO_TAG_TOKEN }}
       TAG_NAME: ${{ github.event.inputs.tag }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
@@ -35,7 +37,27 @@ jobs:
 
           while :; do
             echo "Fetching page $page..."
-            repos=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/orgs/$ORG_NAME/repos?per_page=$per_page&page=$page")
+
+            # Fetch repositories with HTTP status code
+            response=$(curl -s -w "\n%{http_code}" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/orgs/$ORG_NAME/repos?per_page=$per_page&page=$page")
+            http_code=$(echo "$response" | tail -n1)
+            repos=$(echo "$response" | sed '$d')
+
+            if [ "$http_code" != "200" ]; then
+              echo "Error: Received HTTP status code $http_code when fetching repositories."
+              echo "Full response:"
+              echo "$repos"
+              exit 1
+            fi
+
+            # Ensure we received a JSON array.
+            repo_type=$(echo "$repos" | jq -r 'type')
+            if [ "$repo_type" != "array" ]; then
+              echo "Error: Expected an array but got a $repo_type. Response:"
+              echo "$repos"
+              exit 1
+            fi
+          
             repo_count=$(echo "$repos" | jq 'length')
             if [ "$repo_count" -eq 0 ]; then
               echo "No more repositories found."
@@ -62,6 +84,15 @@ jobs:
                 # Get the latest commit SHA from the default branch.
                 commit_sha=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
                   "https://api.github.com/repos/$ORG_NAME/$repo_name/commits/$default_branch" | jq -r '.sha')
+          
+                # Check if the tag already exists.
+                echo "Checking if tag '$TAG_NAME' already exists in $repo_name..."
+                existing_tag_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $GITHUB_TOKEN" \
+                  "https://api.github.com/repos/$ORG_NAME/$repo_name/git/ref/tags/$TAG_NAME")
+                if [ "$existing_tag_code" = "200" ]; then
+                  echo "Tag '$TAG_NAME' already exists in $repo_name. Skipping repository."
+                  continue
+                fi
           
                 if [ "$DRY_RUN" = "true" ]; then
                   echo "DRY RUN: Repository: $repo_name"

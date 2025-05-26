@@ -1,0 +1,84 @@
+name: Update Confluence Page
+
+on:
+  workflow_dispatch:
+    inputs:
+      PAGE_ID:
+        description: 'Confluence page ID to update'
+        required: true
+        type: string
+      CONTENT:
+        description: 'Content to update the Confluence page with'
+        required: true
+        type: string
+      TITLE:
+        description: 'Title of the Confluence page (optional — will stay the same if not set)'
+        required: false
+        type: string
+      ACCESS_TOKEN:
+        description: 'Confluence API access token'
+        required: true
+        type: string
+      CONFLUENCE_URL:
+        description: 'Confluence base URL (e.g. "https://your-domain.atlassian.net")'
+        required: true
+        type: string
+      CONTENT_FORMAT:
+        description: 'Content format (e.g. "storage")'
+        default: storage
+        type: string
+
+jobs:
+  update-page:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch current page data
+        id: get_page
+        run: |
+          RESPONSE=$(curl -s -X GET \
+            -H "Authorization: Bearer ${{ github.event.inputs.ACCESS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ github.event.inputs.CONFLUENCE_URL }}/wiki/rest/api/content/${{ github.event.inputs.PAGE_ID }}?expand=version,title")
+
+          echo "$RESPONSE" > response.json
+
+          VERSION=$(jq '.version.number' response.json)
+          CURRENT_TITLE=$(jq -r '.title' response.json)
+
+          echo "Current version: $VERSION"
+          echo "Current title: $CURRENT_TITLE"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "title=$CURRENT_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Update page
+        run: |
+          NEXT_VERSION=$(( ${{ steps.get_page.outputs.version }} + 1 ))
+          echo "Updating to version $NEXT_VERSION"
+
+          # Use input TITLE if provided, otherwise fallback to current title
+          FINAL_TITLE="${{ github.event.inputs.TITLE }}"
+          if [ -z "$FINAL_TITLE" ]; then
+            FINAL_TITLE="${{ steps.get_page.outputs.title }}"
+          fi
+
+          curl -X PUT \
+            -H "Authorization: Bearer ${{ github.event.inputs.ACCESS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data @- \
+            "${{ github.event.inputs.CONFLUENCE_URL }}/wiki/rest/api/content/${{ github.event.inputs.PAGE_ID }}" <<EOF
+          {
+            "id": "${{ github.event.inputs.PAGE_ID }}",
+            "type": "page",
+            "title": "$FINAL_TITLE",
+            "version": {
+              "number": $NEXT_VERSION
+            },
+            "body": {
+              "${{ github.event.inputs.CONTENT_FORMAT }}": {
+                "value": "${{ github.event.inputs.CONTENT }}",
+                "representation": "${{ github.event.inputs.CONTENT_FORMAT }}"
+              }
+            }
+          }
+          EOF
